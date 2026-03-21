@@ -1,0 +1,60 @@
+{
+
+  "python.useEnvironmentsExtension": true,
+  "python.terminal.activateEnvironment": true,
+
+  // ---------------------------
+  // FORMATTER (BLACK)
+  // ---------------------------
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter":  "ms-python.autopep8",
+
+  // ---------------------------
+  // LINTING (RUFF)
+  // ---------------------------
+  "ruff.enable": true,
+  "ruff.lint.enable": true,
+  "ruff.format.enable": false,
+
+  // ---------------------------
+  // IMPORTS AUTO FIX
+  // ---------------------------
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+
+  // ---------------------------
+  // PYTHON ANALYSIS
+  // ---------------------------
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.autoImportCompletions": true,
+
+  // ---------------------------
+  // TERMINAL
+  // ---------------------------
+  "terminal.integrated.defaultProfile.linux": "bash",
+
+  // ---------------------------
+  // FILES
+  // ---------------------------
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true,
+    "**/.venv": true,
+    "**/__init__.py": true
+  },
+
+  // ---------------------------
+  // EDITOR UX
+  // ---------------------------
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.rulers": [88],
+
+  // ---------------------------
+  // GIT
+  // ---------------------------
+  "git.autofetch": true
+}
