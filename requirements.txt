@@ -1,17 +1,22 @@
 # Core
 python-dotenv
 pydantic
+pydantic-settings
 loguru
+fastapi 
+uvicorn  
+asyncua 
+httpx
+sqlalchemy
+
+
 
 # Testing
 pytest
 pytest-cov
+pytest-asyncio
 
 # Formatting / Linting
 black
 ruff
 ty
-
-# Notebooks
-notebook
-ipykernel

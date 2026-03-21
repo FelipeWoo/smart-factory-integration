@@ -2,8 +2,7 @@
 
 PYTHON := uv
 ENV_FILE := .env
-TEST_ENV_FILE := .env.test
-SRC_DIR := src
+SRC_DIR := app/api
 TEST_DIR := tests
 NOTEBOOK_DIR := scripts/notebooks
 
