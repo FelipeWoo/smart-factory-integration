@@ -1,0 +1,17 @@
+# Core
+python-dotenv
+pydantic
+loguru
+
+# Testing
+pytest
+pytest-cov
+
+# Formatting / Linting
+black
+ruff
+ty
+
+# Notebooks
+notebook
+ipykernel
