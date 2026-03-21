@@ -2,9 +2,9 @@
 
 PYTHON := uv
 ENV_FILE := .env
-SRC_DIR := app/api
+SRC_DIR := app
 TEST_DIR := tests
-NOTEBOOK_DIR := scripts/notebooks
+
 
 # Load environment variables (optional fallback if .env exists)
 ifneq ("$(wildcard $(ENV_FILE))","")

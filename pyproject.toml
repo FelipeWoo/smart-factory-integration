@@ -1,0 +1,28 @@
+[project]
+name = "smart-factory-integration"
+version = "0.1.0"
+description = "Industrial OPC UA integration demo with Python and FastAPI"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "asyncua>=1.1.8",
+    "black>=26.3.1",
+    "fastapi>=0.135.1",
+    "httpx>=0.28.1",
+    "loguru>=0.7.3",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.13.1",
+    "python-dotenv>=1.2.2",
+    "sqlalchemy>=2.0.48",
+    "ty>=0.0.24",
+    "uvicorn>=0.42.0",
+]
+
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.7",
+]
