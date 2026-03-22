@@ -330,3 +330,53 @@ Examples:
 * **HMI** reports errors, state, counters, and operator actions.
 * **Tower light** communicates running, waiting, warning, and fault conditions.
 * **Web dashboard** shows production results, scrap, package count, downtime, stop categories, and hourly performance.
+
+
+---
+
+## State Table
+
+| State                | Description                                  | Entry Conditions                                 | Main Actions                                   | Exit Conditions                      | Next State                              |
+| -------------------- | -------------------------------------------- | ------------------------------------------------ | ---------------------------------------------- | ------------------------------------ | --------------------------------------- |
+| `INIT`               | Power-up and initialization                  | Power-up or reset                                | Clear flags, reset timers, verify devices      | All devices healthy                  | `READY`                                 |
+| `READY`              | Cell ready for automatic operation           | Initialization complete                          | Green tower, conveyors enabled                 | Start command accepted               | `WAIT_PRODUCT`                          |
+| `WAIT_PRODUCT`       | Waiting for pastry at pickup area            | Automatic mode active, cell free                 | Run infeed and allow outfeed                   | `pick_sensor = true`                 | `PRODUCT_DETECTED`                      |
+| `PRODUCT_DETECTED`   | Pastry arrived at pickup area                | Pickup sensor active                             | Set occupied, stop both conveyors              | Product stable                       | `WAIT_VISION`                           |
+| `WAIT_VISION`        | Waiting for quality result                   | Product in pickup zone                           | Wait for vision result ready                   | Result received                      | `DECIDE_ROUTE`                          |
+| `DECIDE_ROUTE`       | Route selection based on quality and counter | Vision result available                          | Select scrap, pos_1, pos_2, or pos_3           | Route assigned                       | `ROBOT_EXECUTE`                         |
+| `ROBOT_EXECUTE`      | Robot running current route                  | Robot command sent                               | Wait for robot completion                      | Robot cycle done                     | `REGISTER_RESULT`                       |
+| `REGISTER_RESULT`    | Update counters after movement               | Robot finished                                   | Update good, scrap, position, package counters | Counters updated                     | `RELEASE_CELL`                          |
+| `RELEASE_CELL`       | Clear occupied and release conveyors         | Current pastry resolved                          | Set occupied false, restart conveyors          | Product arrives or no product        | `WAIT_PRODUCT` or `STARVATION_MONITOR`  |
+| `STARVATION_MONITOR` | Waiting for new product with timeout         | Cell released and no product seen                | Start 60 s timer, yellow warning               | Product arrives or timeout           | `PRODUCT_DETECTED` or `STARVATION_STOP` |
+| `STARVATION_STOP`    | Stop due to no product                       | No-product timeout elapsed                       | Stop infeed, yellow/red alarm, record stop     | Operator reset and product available | `READY` or `WAIT_PRODUCT`               |
+| `MANUAL_STOP`        | Operator stop condition                      | Stop command                                     | Stop process safely, count manual stop         | Reset/start                          | `READY`                                 |
+| `TECHNICAL_STOP`     | Technical failure state                      | Robot fault, motor fault, timeout, inconsistency | Stop outputs, raise fault, record downtime     | Fault cleared and reset              | `READY`                                 |
+| `E_STOP`             | Emergency stop condition                     | E-stop active                                    | Immediate safe stop, red tower                 | E-stop reset and reset procedure     | `INIT` or `READY`                       |
+
+
+---
+
+## Event Table
+
+| Event ID | Event Name             | Trigger                                   | Category   | Action                                       | Logged Data                      |
+| -------- | ---------------------- | ----------------------------------------- | ---------- | -------------------------------------------- | -------------------------------- |
+| `EV001`  | Start command          | Start button pressed                      | Operator   | Enter automatic run                          | Timestamp, operator if available |
+| `EV002`  | Product detected       | `pick_sensor = true`                      | Process    | Set occupied, stop conveyors                 | Timestamp, cycle id              |
+| `EV003`  | Vision passed          | `quality_ok = true`                       | Quality    | Select output route                          | Timestamp, position counter      |
+| `EV004`  | Vision failed          | `quality_ok = false`                      | Quality    | Select scrap route                           | Timestamp                        |
+| `EV005`  | Route to scrap         | Scrap route chosen                        | Process    | Robot sends pastry to scrap                  | Timestamp, reject counter        |
+| `EV006`  | Route to pos_1         | Good product and counter 0                | Process    | Robot places at position 1                   | Timestamp                        |
+| `EV007`  | Route to pos_2         | Good product and counter 1                | Process    | Robot places at position 2                   | Timestamp                        |
+| `EV008`  | Route to pos_3         | Good product and counter 2                | Process    | Robot places at position 3, package complete | Timestamp, package counter       |
+| `EV009`  | Package completed      | Third good pastry placed                  | Production | Increment package count                      | Timestamp, package total         |
+| `EV010`  | Cell released          | Current pastry resolved                   | Process    | Clear occupied, run conveyors                | Timestamp                        |
+| `EV011`  | No product timer start | Cell released and no product              | Warning    | Start starvation timer                       | Timestamp                        |
+| `EV012`  | Starvation stop        | 60 s no-product timeout                   | Stop       | Stop infeed, raise alarm                     | Timestamp, downtime start        |
+| `EV013`  | Manual stop            | Stop button pressed                       | Stop       | Safe stop, count manual stop                 | Timestamp                        |
+| `EV014`  | Technical stop         | Fault or timeout                          | Stop       | Stop system, count technical stop            | Timestamp, fault code            |
+| `EV015`  | Emergency stop         | E-stop pressed                            | Safety     | Immediate safe stop                          | Timestamp                        |
+| `EV016`  | Reset command          | Reset button pressed                      | Operator   | Clear alarms if allowed                      | Timestamp                        |
+| `EV017`  | Robot fault            | `robot_fault = true`                      | Fault      | Enter technical stop                         | Timestamp, robot status          |
+| `EV018`  | Motor fault            | Motor feedback mismatch or overload       | Fault      | Enter technical stop                         | Timestamp, motor id              |
+| `EV019`  | Vision timeout         | Result not received in allowed time       | Fault      | Enter technical stop                         | Timestamp                        |
+| `EV020`  | Count mismatch         | `validated_input != good_out + scrap_out` | Fault      | Raise consistency alarm                      | Timestamp, counts                |
