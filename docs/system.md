@@ -292,3 +292,41 @@ This validation is important to detect counting mismatches or lost units.
     * HMI displays current state, stop reason, and active faults.
     * Tower light shows visual condition.
     * Web dashboard updates counters, rates, scrap, downtime, and package metrics.
+
+
+---
+
+
+## Automation Layers
+
+### Individual Automation Layer
+
+Each subsystem has its own local logic and redundancy.
+
+Examples:
+
+* motor overload and run feedback per conveyor
+* robot internal fault and ready status
+* vision result-ready handshake
+* sensor-level validation
+
+This layer prevents simple failures from propagating silently.
+
+### Coordinated Cell Orchestration Layer
+
+The full process is governed by a finite state machine inside the PLC or supervisory controller. This layer decides which process step follows next.
+
+Examples:
+
+* when to stop conveyors
+* when to wait for vision
+* when to command scrap
+* when to command output position 1, 2, or 3
+* when to release the cell
+* when to declare a starvation stop
+
+### Supervision Layer
+
+* **HMI** reports errors, state, counters, and operator actions.
+* **Tower light** communicates running, waiting, warning, and fault conditions.
+* **Web dashboard** shows production results, scrap, package count, downtime, stop categories, and hourly performance.
