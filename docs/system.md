@@ -73,3 +73,59 @@ The system includes at least:
 * Stop button
 * Emergency stop button
 * Reset button
+
+---
+
+## Devices and Signals
+
+### Sensors and buttons
+* `pick_sensor`: pastry present in SCARA pickup area
+* `infeed_running_fb`: feedback that infeed conveyor motor is running
+* `outfeed_running_fb`: feedback that outfeed conveyor motor is running
+* `emergency_stop_ok`
+* `emergency_stop_pressed`
+* `start_pressed`
+* `reset_pressed`
+* `stop_pressed`
+
+### SCARA and Vision
+* `robot_ready`
+* `robot_busy`
+* `robot_fault`
+* `vision_ready`
+* `vision_busy`
+* `quality_ok`
+* `quality_fail`
+
+### Conveyors
+* `infeed_motor_run_cmd`
+* `outfeed_motor_run_cmd`
+* `robot_cycle_start`
+* `robot_route_scrap`
+* `robot_route_pos1`
+* `robot_route_pos2`
+* `robot_route_pos3`
+
+### Indicators
+* `tower_red`
+* `tower_yellow`
+* `tower_green`
+* `tower_buzzer`
+
+### Internal Variables
+* `occupied_flag`
+* `position_counter` values `0, 1, 2` before next place command
+* `package_count`
+* `scrap_count`
+* `valid_in_count` individual pastry count
+* `good_out_count` collection of three count
+* `scrap_out_count` individual pastry count
+* `manual_stop_count`
+* `starvation_stop_count`
+* `technical_stop_count`
+* `downtime_seconds`
+* `hourly_production`
+* `current_state`
+* `current_stop_reason`
+* `no_product_timer` the total amount of time without product
+* `cycle_active` the total amount of time active
