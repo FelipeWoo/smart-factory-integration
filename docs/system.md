@@ -408,3 +408,64 @@ Any mismatch should generate an event and optionally a technical stop depending 
 | Availability loss by starvation      | `starvation_downtime / scheduled_time * 100` |
 | Availability loss by technical stops | `technical_downtime / scheduled_time * 100`  |
 | Manual stop frequency                | `manual_stop_count / operating_hours`        |
+
+
+## Finite State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> INIT
+    INIT --> READY : devices healthy
+    READY --> WAIT_PRODUCT : start automatic
+
+    WAIT_PRODUCT --> PRODUCT_DETECTED : pick_sensor true
+    WAIT_PRODUCT --> STARVATION_MONITOR : no product after release
+
+    PRODUCT_DETECTED --> WAIT_VISION : stop conveyors and set occupied
+    WAIT_VISION --> DECIDE_ROUTE : vision_result_ready
+    WAIT_VISION --> TECHNICAL_STOP : vision timeout
+
+    DECIDE_ROUTE --> ROBOT_EXECUTE : route scrap
+    DECIDE_ROUTE --> ROBOT_EXECUTE : route pos_1
+    DECIDE_ROUTE --> ROBOT_EXECUTE : route pos_2
+    DECIDE_ROUTE --> ROBOT_EXECUTE : route pos_3
+
+    ROBOT_EXECUTE --> REGISTER_RESULT : robot cycle done
+    ROBOT_EXECUTE --> TECHNICAL_STOP : robot fault or timeout
+
+    REGISTER_RESULT --> RELEASE_CELL : counters updated
+
+    RELEASE_CELL --> WAIT_PRODUCT : product detected quickly
+    RELEASE_CELL --> STARVATION_MONITOR : no product detected
+
+    STARVATION_MONITOR --> PRODUCT_DETECTED : pick_sensor true before 60 s
+    STARVATION_MONITOR --> STARVATION_STOP : timeout 60 s
+
+    STARVATION_STOP --> READY : reset and conditions ok
+    MANUAL_STOP --> READY : reset/start
+    TECHNICAL_STOP --> READY : fault cleared and reset
+
+    READY --> MANUAL_STOP : stop button
+    WAIT_PRODUCT --> MANUAL_STOP : stop button
+    PRODUCT_DETECTED --> MANUAL_STOP : stop button safe stop
+    WAIT_VISION --> MANUAL_STOP : stop button safe stop
+    DECIDE_ROUTE --> MANUAL_STOP : stop button safe stop
+    ROBOT_EXECUTE --> MANUAL_STOP : controlled stop if allowed
+    RELEASE_CELL --> MANUAL_STOP : stop button
+
+    INIT --> E_STOP : emergency stop
+    READY --> E_STOP : emergency stop
+    WAIT_PRODUCT --> E_STOP : emergency stop
+    PRODUCT_DETECTED --> E_STOP : emergency stop
+    WAIT_VISION --> E_STOP : emergency stop
+    DECIDE_ROUTE --> E_STOP : emergency stop
+    ROBOT_EXECUTE --> E_STOP : emergency stop
+    REGISTER_RESULT --> E_STOP : emergency stop
+    RELEASE_CELL --> E_STOP : emergency stop
+    STARVATION_MONITOR --> E_STOP : emergency stop
+    STARVATION_STOP --> E_STOP : emergency stop
+    MANUAL_STOP --> E_STOP : emergency stop
+    TECHNICAL_STOP --> E_STOP : emergency stop
+
+    E_STOP --> INIT : reset sequence
+```
