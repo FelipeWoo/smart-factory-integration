@@ -380,3 +380,31 @@ Examples:
 | `EV018`  | Motor fault            | Motor feedback mismatch or overload       | Fault      | Enter technical stop                         | Timestamp, motor id              |
 | `EV019`  | Vision timeout         | Result not received in allowed time       | Fault      | Enter technical stop                         | Timestamp                        |
 | `EV020`  | Count mismatch         | `validated_input != good_out + scrap_out` | Fault      | Raise consistency alarm                      | Timestamp, counts                |
+
+
+## Validation and Reconciliation Rules
+
+The cell should maintain a reconciliation rule across processed pastries:
+
+`validated_input = good_out_count + scrap_out_count`
+
+Where:
+
+* `validated_input` increases whenever a pastry is accepted into the vision-reviewed cycle.
+* `good_out_count` increases when a pastry is placed at pos_1, pos_2, or pos_3.
+* `scrap_out_count` increases when a pastry is routed to scrap.
+
+Any mismatch should generate an event and optionally a technical stop depending on the criticality.
+
+---
+
+## KPI Examples
+
+| KPI                                  | Formula                                      |
+| ------------------------------------ | -------------------------------------------- |
+| Good pastries/hour                   | `good_out_count / operating_hours`           |
+| Packages/hour                        | `package_count / operating_hours`            |
+| Scrap rate                           | `scrap_count / validated_input * 100`        |
+| Availability loss by starvation      | `starvation_downtime / scheduled_time * 100` |
+| Availability loss by technical stops | `technical_downtime / scheduled_time * 100`  |
+| Manual stop frequency                | `manual_stop_count / operating_hours`        |
