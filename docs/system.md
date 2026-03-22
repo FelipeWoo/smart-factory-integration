@@ -95,7 +95,7 @@ The system includes at least:
 * `vision_ready`
 * `vision_busy`
 * `quality_ok`
-* `quality_fail`
+
 
 ### Conveyors
 * `infeed_motor_run_cmd`
@@ -116,7 +116,6 @@ The system includes at least:
 * `occupied_flag`
 * `position_counter` values `0, 1, 2` before next place command
 * `package_count`
-* `scrap_count`
 * `valid_in_count` individual pastry count
 * `good_out_count` collection of three count
 * `scrap_out_count` individual pastry count
@@ -203,3 +202,93 @@ The system must record at least the following:
   * `validated_input = good_out + scrap_out`
 
 This validation is important to detect counting mismatches or lost units.
+
+---
+
+## How the System Works
+
+### Step-by-Step Sequence
+
+1. **System idle and ready**
+
+   * PLC is in automatic ready state.
+   * SCARA is ready.
+   * `occupied_flag = false`.
+   * Infeed and outfeed conveyors are allowed to run.
+   * Tower light is green.
+
+2. **Infeed conveyor feeds product**
+
+   * `infeed_motor` runs while no pastry is detected in the pickup area.
+   * Pastries continue moving toward the SCARA collection zone.
+
+3. **Pickup sensor detects product**
+
+   * `pick_sensor = true`.
+   * PLC sets `occupied_flag = true`.
+   * PLC stops both conveyors.
+   * The pastry is now committed to the current processing cycle.
+
+4. **Vision result is received**
+
+   * The vision subsystem evaluates the pastry.
+   * PLC waits for `vision_busy` to `vision_ready`.
+   * PLC reads `quality_ok`.
+
+5. **Route is selected**
+
+   * If `quality_ok = false`, route is `scrap`.
+   * If `quality_ok = true` and `position_counter = 0`, route is `pos_1`.
+   * If `quality_ok = true` and `position_counter = 1`, route is `pos_2`.
+   * If `quality_ok = true` and `position_counter = 2`, route is `pos_3`.
+
+6. **SCARA cycle starts**
+
+   * PLC sends robot start plus route command.
+   * Robot takes the pastry from the pickup area.
+   * Robot moves the pastry to the selected destination.
+
+7. **If route is scrap**
+
+   * Robot places pastry in scrap tray.
+   * `scrap_out_count++`.
+   * `position_counter` does not change.
+
+8. **If route is pos_1**
+
+   * Robot places good pastry in output position 1.
+   * `good_out_count++`.
+   * `position_counter = 1`.
+
+9. **If route is pos_2**
+
+   * Robot places good pastry in output position 2.
+   * `good_out_count++`.
+   * `position_counter = 2`.
+
+10. **If route is pos_3**
+
+    * Robot places good pastry in output position 3.
+    * `good_out_count++`.
+    * Package is complete.
+    * `package_count++`.
+    * `position_counter = 0`.
+
+11. **Cycle release**
+
+    * PLC sets `occupied_flag = false`.
+    * PLC releases both conveyors.
+    * Infeed moves until the next pastry reaches pickup.
+    * Outfeed moves to send the current output arrangement toward packaging.
+
+12. **No-product supervision**
+
+    * After release, if no new product arrives, the PLC starts a 60-second no-product timer.
+    * If product arrives before timeout, the timer resets and the cycle restarts.
+    * If timeout expires, PLC stops infeed and raises starvation stop.
+
+13. **Alarm and operator reporting**
+
+    * HMI displays current state, stop reason, and active faults.
+    * Tower light shows visual condition.
+    * Web dashboard updates counters, rates, scrap, downtime, and package metrics.
