@@ -24,7 +24,7 @@ def setup_loguru(level: str = "DEBUG", log_file: Path = Path("logs/main.log")) -
     log_path = Path(log_file).resolve()
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    log_file_name = log_path.stem
+    log_file_name = log_path.stem.split("_")[0]
 
     # Remove previous handlers
     logger.remove()

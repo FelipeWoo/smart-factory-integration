@@ -1,10 +1,8 @@
-from utils.boot import boot
+from app.utils.boot import boot
 
 
-def main():
+def main() -> None:
     config = boot("main")
-
-    # TODO: Add your core logic here
     print(f"Application: {config.name}")
 
 
