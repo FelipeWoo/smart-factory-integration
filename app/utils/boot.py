@@ -1,8 +1,10 @@
 import os
-from dotenv import load_dotenv
-from utils.logger import setup_loguru, logger
-from pydantic import BaseModel
 from pathlib import Path
+
+from dotenv import load_dotenv
+from pydantic import BaseModel
+
+from app.utils.logger import logger, setup_loguru
 
 
 class AppConfig(BaseModel):
@@ -15,29 +17,32 @@ class AppConfig(BaseModel):
 def get_root() -> str:
     current = Path.cwd()
     for parent in [current] + list(current.parents):
-        if (parent / "Makefile").is_file():
+        if (parent / ".git").is_dir():
             return str(parent.resolve())
-    raise FileNotFoundError("Makefile not found in any parent directory.")
+    raise FileNotFoundError(
+        ".git directory not found in any parent directory.")
 
 
-def boot(log_name: str) -> AppConfig:
+def load_config() -> AppConfig:
     load_dotenv(override=True)
-
-    config = AppConfig(
+    return AppConfig(
         name=os.getenv("APP_NAME", "default"),
         env=os.getenv("APP_ENV", "production"),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
-        root=get_root()
+        root=get_root(),
     )
 
-    log_dir = Path(config.root) / "logs" / f"{log_name}.log"
 
-    setup_loguru(level=config.log_level, log_file=log_dir)
+def init_logger(log_name: str, config: AppConfig) -> None:
+    log_path = Path(config.root) / "logs" / f"{log_name}.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    setup_loguru(level=config.log_level, log_file=log_path)
+
+
+def boot(log_name: str) -> AppConfig:
+    config = load_config()
+    init_logger(log_name, config=config)
     logger.info("System initialized.")
     logger.debug(f"AppConfig: {config.model_dump()}")
 
     return config
-
-
-
-    

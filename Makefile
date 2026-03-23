@@ -3,7 +3,7 @@
 PYTHON := uv
 ENV_FILE := .env
 SRC_DIR := app
-TEST_DIR := tests
+TEST_DIR := app/tests
 
 
 # Load environment variables (optional fallback if .env exists)
@@ -33,11 +33,13 @@ init:
 	$(PYTHON) add -r requirements.txt
 
 run:
+	clear
 	@cd $(SRC_DIR) && $(PYTHON) run main.py
 
 test:
+	clear
 	APP_ENV=test $(PYTHON) pip install -e .
-	APP_ENV=test $(PYTHON) run -m pytest $(TEST_DIR)
+	APP_ENV=test $(PYTHON) run -m pytest $(TEST_DIR) -v -s
 
 cov:
 	APP_ENV=test $(PYTHON) run -m pytest --cov=$(SRC_DIR) --cov-report=term-missing

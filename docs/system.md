@@ -310,7 +310,7 @@ Examples:
 * vision result-ready handshake
 * sensor-level validation
 
-This layer prevents simple failures from propagating silently.
+This layer prEvent simple failures from propagating silently.
 
 ### Coordinated Cell Orchestration Layer
 
