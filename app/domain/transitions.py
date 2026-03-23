@@ -1,76 +1,72 @@
-from app.domain.events import Event
+from app.domain.events import MachineEvent
 from app.domain.states import State
 
-TRANSITIONS: dict[State, dict[Event, State]] = {
+TRANSITIONS: dict[State, dict[MachineEvent, State]] = {
 
     State.IDLE: {
-        Event.MACHINE_START_REQUESTED: State.STARTING,
-        Event.MACHINE_FAULT_DETECTED: State.FAULTED,
-        Event.MACHINE_STOP_REQUESTED: State.STOPPED,
-        Event.MACHINE_E_STOP_PRESSED: State.E_STOP,
+        MachineEvent.START_REQUESTED: State.STARTING,
+        MachineEvent.FAULT_DETECTED: State.FAULTED,
+        MachineEvent.STOP_REQUESTED: State.STOPPED,
+        MachineEvent.EMERGENCY_STOP_PRESSED: State.E_STOP,
     },
 
     State.STARTING: {
-        Event.MACHINE_STARTED: State.RUNNING,
-        Event.MACHINE_FAULT_DETECTED: State.FAULTED,
-        Event.MACHINE_STOP_REQUESTED: State.STOPPED,
-        Event.MACHINE_E_STOP_PRESSED: State.E_STOP,
+        MachineEvent.STARTED: State.RUNNING,
+        MachineEvent.FAULT_DETECTED: State.FAULTED,
+        MachineEvent.STOP_REQUESTED: State.STOPPED,
+        MachineEvent.EMERGENCY_STOP_PRESSED: State.E_STOP,
     },
 
     State.RUNNING: {
-        Event.HEARTBEAT: State.RUNNING,
-        Event.UNIT_DETECTED: State.RUNNING,
-        Event.UNIT_CLASSIFIED: State.RUNNING,
-        Event.PACKAGE_STARTED: State.RUNNING,
-        Event.PACKAGE_COMPLETED: State.RUNNING,
-        Event.MACHINE_STARVATION_DETECTED: State.STARVED,
-        Event.MACHINE_BLOCKAGE_DETECTED: State.BLOCKED,
-        Event.MACHINE_FAULT_DETECTED: State.FAULTED,
-        Event.MACHINE_STOP_REQUESTED: State.STOPPED,
-        Event.MACHINE_E_STOP_PRESSED: State.E_STOP,
+        MachineEvent.HEARTBEAT: State.RUNNING,
+        MachineEvent.BLOCKAGE_DETECTED: State.BLOCKED,
+        MachineEvent.STARVATION_DETECTED: State.STARVED,
+        MachineEvent.FAULT_DETECTED: State.FAULTED,
+        MachineEvent.STOP_REQUESTED: State.STOPPED,
+        MachineEvent.EMERGENCY_STOP_PRESSED: State.E_STOP,
     },
 
     State.STARVED: {
-        Event.MACHINE_RESET_REQUESTED: State.RESETTING,
-        Event.MACHINE_FAULT_DETECTED: State.FAULTED,
-        Event.MACHINE_STOP_REQUESTED: State.STOPPED,
-        Event.MACHINE_E_STOP_PRESSED: State.E_STOP,
+        MachineEvent.RESET_REQUESTED: State.RESETTING,
+        MachineEvent.FAULT_DETECTED: State.FAULTED,
+        MachineEvent.STOP_REQUESTED: State.STOPPED,
+        MachineEvent.EMERGENCY_STOP_PRESSED: State.E_STOP,
     },
 
     State.BLOCKED: {
-        Event.MACHINE_RESET_REQUESTED: State.RESETTING,
-        Event.MACHINE_FAULT_DETECTED: State.FAULTED,
-        Event.MACHINE_STOP_REQUESTED: State.STOPPED,
-        Event.MACHINE_E_STOP_PRESSED: State.E_STOP,
+        MachineEvent.RESET_REQUESTED: State.RESETTING,
+        MachineEvent.FAULT_DETECTED: State.FAULTED,
+        MachineEvent.STOP_REQUESTED: State.STOPPED,
+        MachineEvent.EMERGENCY_STOP_PRESSED: State.E_STOP,
     },
 
     State.STOPPED: {
-        Event.MACHINE_START_REQUESTED: State.STARTING,
-        Event.MACHINE_FAULT_DETECTED: State.FAULTED,
-        Event.MACHINE_E_STOP_PRESSED: State.E_STOP,
+        MachineEvent.START_REQUESTED: State.STARTING,
+        MachineEvent.FAULT_DETECTED: State.FAULTED,
+        MachineEvent.EMERGENCY_STOP_PRESSED: State.E_STOP,
     },
 
     State.FAULTED: {
-        Event.MACHINE_FAULT_CLEARED: State.IDLE,
-        Event.MACHINE_RESET_REQUESTED: State.RESETTING,
-        Event.MACHINE_E_STOP_PRESSED: State.E_STOP,
+        MachineEvent.FAULT_CLEARED: State.IDLE,
+        MachineEvent.RESET_REQUESTED: State.RESETTING,
+        MachineEvent.EMERGENCY_STOP_PRESSED: State.E_STOP,
     },
 
     State.E_STOP: {
-        Event.MACHINE_E_STOP_CLEARED: State.STOPPED,
+        MachineEvent.EMERGENCY_STOP_CLEARED: State.STOPPED,
     },
 
     State.RESETTING: {
-        Event.MACHINE_RESET_COMPLETED: State.IDLE,
-        Event.MACHINE_FAULT_DETECTED: State.FAULTED,
-        Event.MACHINE_STOP_REQUESTED: State.STOPPED,
-        Event.MACHINE_E_STOP_PRESSED: State.E_STOP,
+        MachineEvent.RESET_COMPLETED: State.IDLE,
+        MachineEvent.FAULT_DETECTED: State.FAULTED,
+        MachineEvent.STOP_REQUESTED: State.STOPPED,
+        MachineEvent.EMERGENCY_STOP_PRESSED: State.E_STOP,
     },
 
 }
 
 
-def resolve_next_state(current: State, event: Event) -> State:
+def resolve_next_state(current: State, event: MachineEvent) -> State:
     try:
         return TRANSITIONS[current][event]
     except KeyError:

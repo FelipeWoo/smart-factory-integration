@@ -1,11 +1,16 @@
 import pytest
 
-from app.domain.events import Event
+from app.domain.events import MachineEvent
 from app.domain.states import State
 from app.domain.transitions import TRANSITIONS, resolve_next_state
 from app.utils.boot import boot
+from app.utils.logger import logger
 
 boot_config = boot("test_transition_rules")
+
+
+def test_logger():
+    logger.info("Testing domain transitions rules.")
 
 
 @pytest.mark.parametrize(
@@ -41,13 +46,13 @@ def test_each_event_used_somewhere():
         for event in transitions
     }
 
-    for event in Event:
+    for event in MachineEvent:
         assert event in used_events, f"{event} unused"
 
 
 def test_all_invalid_transitions():
     for state in State:
-        for event in Event:
+        for event in MachineEvent:
             if event not in TRANSITIONS.get(state, {}):
                 with pytest.raises(ValueError):
                     resolve_next_state(state, event)
