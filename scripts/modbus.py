@@ -36,7 +36,11 @@ def main():
     time.sleep(1)
     state(client)
     print("resetting start...")
+
     client.write_coil(address=2, value=False)
+    time.sleep(1)
+    state(client)
+
     time.sleep(5)
     # stop_cmd
     print("stopping...")
