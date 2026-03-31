@@ -1,6 +1,6 @@
 {
   "meta": {
-    "name": "blink",
+    "name": "scara_cell",
     "type": "plc-project"
   },
   "data": {
@@ -26,17 +26,8 @@
         "globalVariables": []
       }
     },
-    "servers": [
-      {
-        "name": "modbus",
-        "protocol": "modbus-tcp",
-        "modbusSlaveConfig": {
-          "enabled": true,
-          "networkInterface": "0.0.0.0",
-          "port": 502
-        }
-      }
-    ],
-    "deletedPous": []
+    "deletedPous": [],
+    "deletedServers": [],
+    "deletedRemoteDevices": []
   }
 }
