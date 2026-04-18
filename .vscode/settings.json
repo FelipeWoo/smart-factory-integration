@@ -9,6 +9,9 @@
   "editor.formatOnSave": true,
   "editor.defaultFormatter":  "ms-python.autopep8",
 
+
+  
+
   // ---------------------------
   // LINTING (RUFF)
   // ---------------------------
@@ -49,9 +52,9 @@
   // ---------------------------
   // EDITOR UX
   // ---------------------------
-  "editor.tabSize": 2,
-  "editor.insertSpaces": true,
-  "editor.rulers": [88],
+  // "editor.tabSize": 2,
+  // "editor.insertSpaces": true,
+  "editor.rulers": [200],
 
   // ---------------------------
   // GIT

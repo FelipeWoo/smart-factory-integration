@@ -60,3 +60,8 @@ clean:
 
 reset: clean
 	rm -rf .venv logs
+
+
+
+opc:
+	@uv run -m codesys.opc
