@@ -1,6 +1,8 @@
 from time import sleep
 from typing import Any, List
 
+from .signal import Signal
+
 
 async def read_bool(node) -> bool:
     value = await node.read_value()
@@ -41,14 +43,14 @@ async def browse(name: str, node: Any, level: int = 0, max_depth: int = 4) -> An
     return None
 
 
-async def state(signals: List) -> None:
+async def state(signals: List[Signal]) -> None:
     for signal in signals:
         await signal.get_state()
         print(signal)
     print()
 
 
-async def pulse(signal: List) -> None:
+async def pulse(signal: Signal) -> None:
     await signal.set_state(True)
     sleep(.500)
     await signal.set_state(False)
