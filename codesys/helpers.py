@@ -1,4 +1,4 @@
-from time import sleep
+from asyncio import sleep
 from typing import Any, List
 
 from .signal import Signal
@@ -52,5 +52,5 @@ async def state(signals: List[Signal]) -> None:
 
 async def pulse(signal: Signal) -> None:
     await signal.set_state(True)
-    sleep(.500)
+    await sleep(.500)
     await signal.set_state(False)

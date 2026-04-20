@@ -65,3 +65,7 @@ reset: clean
 
 opc:
 	@uv run -m codesys.opc
+
+
+plc:
+	@uv run -m codesys.plc_conveyor

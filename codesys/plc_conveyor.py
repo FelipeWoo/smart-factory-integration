@@ -12,23 +12,28 @@ PORT = "4840"
 URL = f"opc.tcp://{IP}:{PORT}"
 
 
-async def main() -> None:
-
-    print("Trying OPC anonymous connection...")
+async def main():
+    print("Conveyor OPC anonymous connection...")
 
     client = Client(URL)
     connected = False
 
     signals = []
 
-    lamp = Signal(name="lamp_on", type="boolean")
-    signals.append(lamp)
-
-    start = Signal(name="start_cmd", type="boolean")
+    start = Signal(name="bStartCmd", type="boolean")
     signals.append(start)
 
-    stop = Signal(name="stop_cmd", type="boolean")
+    stop = Signal(name="bStopCmd", type="boolean")
     signals.append(stop)
+
+    part_detected = Signal(name="bPartDetected", type="boolean")
+    signals.append(part_detected)
+
+    motor_running = Signal(name="bMotorIsRunning", type="boolean")
+    signals.append(motor_running)
+
+    system_ready = Signal(name="bSystemReady", type="boolean")
+    signals.append(system_ready)
 
     for signal in signals:
         signal.bind_client(client)
@@ -43,6 +48,9 @@ async def main() -> None:
 
         for signal in signals:
             await signal.set_node()
+            # for debugging
+            # print(f"{signal.name} -> {signal._node_id}")
+        print()
 
         await sleep(.100)
 
@@ -50,14 +58,21 @@ async def main() -> None:
 
         await sleep(1)
 
+        print("Starting...")
         await pulse(start)
         await state(signals)
 
-        await sleep(5)
+        for _ in range(10):
+            print("Sensing part...")
+            await pulse(part_detected)
+            await sleep(1)
 
+        print("Stopping...")
         await pulse(stop)
         await state(signals)
 
+    except asyncio.CancelledError:
+        raise
     except Exception as exc:
         print(f"Connection error: {exc}")
 
@@ -70,5 +85,9 @@ async def main() -> None:
                 print(f"Disconnect warning: {exc}")
         print("Disconnected")
 
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\nInterrupted by user (Ctrl + C)")
