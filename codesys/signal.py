@@ -43,13 +43,14 @@ class Signal(BaseModel):
             raise ValueError("node_id is not set")
         self._node = self._client.get_node(self._node_id)
 
-    async def get_state(self) -> None:
+    async def get_state(self) -> bool:
         if self._get_state_fn is None:
             raise ValueError("get_state function is not bound")
 
         if self._node is None:
             raise ValueError("node is not set")
         self.state = await self._get_state_fn(self._node)
+        return self.state
 
     async def set_state(self, value: bool) -> None:
         if self._set_state_fn is None:

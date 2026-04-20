@@ -54,3 +54,12 @@ async def pulse(signal: Signal) -> None:
     await signal.set_state(True)
     await sleep(.500)
     await signal.set_state(False)
+
+
+async def monitor_signals(signals: list[Signal], interval: float = 0.5) -> None:
+    while True:
+        print("\n--- STATES ---")
+        for signal in signals:
+            value = await signal.get_state()
+            print(f"{signal.name}: {value}")
+        await sleep(interval)

@@ -1,15 +1,37 @@
 import asyncio
-from asyncio import sleep
 
 from asyncua import Client
 
-from .helpers import browse, pulse, read_bool, state, write_bool
+from .helpers import browse, monitor_signals, pulse, read_bool, write_bool
 from .signal import Signal
 
 IP = "192.168.6.218"
 PORT = "4840"
 
 URL = f"opc.tcp://{IP}:{PORT}"
+
+
+async def run_test_sequence(
+    start: Signal,
+    stop: Signal,
+    part_detected: Signal,
+) -> None:
+    await asyncio.sleep(1)
+
+    print("\nStarting...")
+    await pulse(start)
+
+    await asyncio.sleep(2)
+
+    for i in range(5):
+        print(f"\nSensing part... {i + 1}")
+        await pulse(part_detected)
+        await asyncio.sleep(1)
+
+    print("\nStopping...")
+    await pulse(stop)
+
+    await asyncio.sleep(1)
 
 
 async def main():
@@ -21,25 +43,26 @@ async def main():
     signals = []
 
     start = Signal(name="bStartCmd", type="boolean")
-    signals.append(start)
-
     stop = Signal(name="bStopCmd", type="boolean")
-    signals.append(stop)
-
     part_detected = Signal(name="bPartDetected", type="boolean")
-    signals.append(part_detected)
-
     motor_running = Signal(name="bMotorIsRunning", type="boolean")
-    signals.append(motor_running)
-
     system_ready = Signal(name="bSystemReady", type="boolean")
-    signals.append(system_ready)
+
+    signals.extend([
+        start,
+        stop,
+        part_detected,
+        motor_running,
+        system_ready,
+    ])
 
     for signal in signals:
         signal.bind_client(client)
         signal.bind_browse_fn(browse)
         signal.bind_get_state_fn(read_bool)
         signal.bind_set_state_fn(write_bool)
+
+    monitor_task = None
 
     try:
         await client.connect()
@@ -50,26 +73,15 @@ async def main():
             await signal.set_node()
             # for debugging
             # print(f"{signal.name} -> {signal._node_id}")
-        print()
 
-        await sleep(.100)
+        monitor_task = asyncio.create_task(
+            monitor_signals(signals, interval=0.5))
 
-        await state(signals)
-
-        await sleep(1)
-
-        print("Starting...")
-        await pulse(start)
-        await state(signals)
-
-        for _ in range(10):
-            print("Sensing part...")
-            await pulse(part_detected)
-            await sleep(1)
-
-        print("Stopping...")
-        await pulse(stop)
-        await state(signals)
+        await run_test_sequence(
+            start=start,
+            stop=stop,
+            part_detected=part_detected,
+        )
 
     except asyncio.CancelledError:
         raise
@@ -77,6 +89,13 @@ async def main():
         print(f"Connection error: {exc}")
 
     finally:
+        if monitor_task is not None:
+            monitor_task.cancel()
+            try:
+                await monitor_task
+            except asyncio.CancelledError:
+                pass
+
         if connected:
             print("Disconnecting")
             try:
