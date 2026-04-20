@@ -1,85 +1,105 @@
-PROGRAM PLC_PRG
+PROGRAM PRG_Main
 VAR
-	start_cmd		: BOOL := FALSE;
-    start_button    : BOOL := FALSE;
-	start_request	: BOOL := FALSE;
-	start_pulse		: BOOL := FALSE;
-	
-	stop_cmd		: BOOL := FALSE;
-    stop_button     : BOOL := FALSE;
-	stop_request	: BOOL := FALSE;
-	stop_pulse		: BOOL := FALSE;
-	
-	e_stop			: BOOL := FALSE;
-	
-	reset_cmd		: BOOL := FALSE;
-	reset_request	: BOOL := FALSE;
-	reset_pulse		: BOOL := FALSE;
-	
-    r_start         : R_TRIG;
-    r_stop          : R_TRIG;
-	r_reset         : R_TRIG;
+    (* --- COMMANDS / INPUTS --- *)
+    bStartCmd      : BOOL := FALSE;
+    bStartBtn      : BOOL := FALSE;
+    bStopCmd       : BOOL := FALSE;
+    bStopBtn       : BOOL := FALSE;
+    bResetCmd      : BOOL := FALSE;
+    bEStop         : BOOL := FALSE;
 
-	motor_running   : BOOL := FALSE;
-    part_detected   : BOOL := FALSE;
-    alarm_active    : BOOL := FALSE;
-	
-	system_ready	: BOOL := TRUE;
-	auto_mode		: BOOL := TRUE;
-	starvation		: BOOL := FALSE;
-	
-	t_starvation_delay	: TON;
-	t_fault_delay	    : TON;
-	
+    (* --- REQUESTS (LOGIC CONDITIONS) --- *)
+    bStartReq      : BOOL := FALSE;
+    bStopReq       : BOOL := FALSE;
+    bResetReq      : BOOL := FALSE;
+
+    (* --- EDGE DETECTION --- *)
+    rTrigStart     : R_TRIG;
+    rTrigStop      : R_TRIG;
+    rTrigReset     : R_TRIG;
+
+    bStartPulse    : BOOL := FALSE;
+    bStopPulse     : BOOL := FALSE;
+    bResetPulse    : BOOL := FALSE;
+
+    (* --- PROCESS STATES --- *)
+    bMotorIsRunning : BOOL := FALSE;
+    bPartDetected   : BOOL := FALSE;
+    bAlarmActive    : BOOL := FALSE;
+    bStarvation     : BOOL := FALSE;
+
+    (* --- SYSTEM CONDITIONS --- *)
+    bSystemReady   : BOOL := TRUE;
+    bAutoMode      : BOOL := TRUE;
+
+    (* --- TIMERS --- *)
+    tStarvation    : TON;
+    tFault         : TON;
+
 END_VAR
 
-system_ready := auto_mode AND NOT e_stop AND NOT starvation AND NOT alarm_active;
-stop_request := stop_cmd OR stop_button;
-start_request := (start_cmd OR start_button) AND system_ready;
-reset_request := reset_cmd AND NOT e_stop;
+
+(* --- SYSTEM READY --- *)
+bSystemReady := bAutoMode AND NOT bEStop AND NOT bStarvation AND NOT bAlarmActive;
+
+(* --- REQUEST GENERATION --- *)
+bStopReq  := bStopCmd OR bStopBtn;
+bStartReq := (bStartCmd OR bStartBtn) AND bSystemReady;
+bResetReq := bResetCmd AND NOT bEStop;
 
 
-r_start(CLK := start_request);
-r_stop(CLK := stop_request);
-r_reset(CLK := reset_request);
+(* --- EDGE DETECTION --- *)
+rTrigStart(CLK := bStartReq);
+rTrigStop(CLK := bStopReq);
+rTrigReset(CLK := bResetReq);
 
-IF e_stop THEN
-    motor_running := FALSE;
+bStartPulse := rTrigStart.Q;
+bStopPulse  := rTrigStop.Q;
+bResetPulse := rTrigReset.Q;
+
+
+(* --- EMERGENCY STOP --- *)
+IF bEStop THEN
+    bMotorIsRunning := FALSE;
 END_IF;
 
-start_pulse := r_start.Q;
-stop_pulse := r_stop.Q;
-reset_pulse := r_reset.Q;
 
-IF stop_pulse THEN
-    motor_running := FALSE;
-ELSIF start_pulse THEN
-    motor_running := TRUE;
+(* --- START / STOP LOGIC --- *)
+IF bStopPulse THEN
+    bMotorIsRunning := FALSE;
+ELSIF bStartPulse THEN
+    bMotorIsRunning := TRUE;
 END_IF;
 
-t_starvation_delay(
-	IN := NOT part_detected AND motor_running, (*absence of product*)
-	PT := T#15S (*time just fot simulation purposes*)
+
+(* --- STARVATION DETECTION --- *)
+tStarvation(
+    IN := NOT bPartDetected AND bMotorIsRunning,
+    PT := T#15S
 );
 
-IF t_starvation_delay.Q THEN
-	starvation := TRUE;
-	motor_running := FALSE;
+IF tStarvation.Q THEN
+    bStarvation := TRUE;
+    bMotorIsRunning := FALSE;
 END_IF;
 
-t_fault_delay(
-	IN := part_detected AND motor_running, (*something obstructing*)
-	PT := T#10S (*time just fot simulation purposes*)
+
+(* --- FAULT DETECTION --- *)
+tFault(
+    IN := bPartDetected AND bMotorIsRunning,
+    PT := T#10S
 );
 
-IF t_fault_delay.Q THEN
-    alarm_active := TRUE;
-	motor_running := FALSE;    
+IF tFault.Q THEN
+    bAlarmActive := TRUE;
+    bMotorIsRunning := FALSE;
 END_IF;
 
-IF reset_pulse THEN
-	starvation := FALSE;
-	alarm_active := FALSE;
+
+(* --- RESET --- *)
+IF bResetPulse THEN
+    bStarvation  := FALSE;
+    bAlarmActive := FALSE;
 END_IF;
 
 END_PROGRAM
