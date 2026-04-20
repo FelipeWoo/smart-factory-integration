@@ -22,12 +22,14 @@ async def main():
 
     signals = []
 
-    start = Signal(name="bStartCmd", type="boolean")
-    stop = Signal(name="bStopCmd", type="boolean")
-    part_detected = Signal(name="bPartDetected", type="boolean")
-    motor_running = Signal(name="bMotorIsRunning", type="boolean")
-    system_ready = Signal(name="bSystemReady", type="boolean")
-    reset = Signal(name="bResetCmd", type="boolean")
+    start = Signal(name="bStartCmd", type="io")
+    stop = Signal(name="bStopCmd", type="io")
+    reset = Signal(name="bResetCmd", type="io")
+
+    part_detected = Signal(name="bPartDetected", type="io")
+
+    motor_running = Signal(name="bMotorIsRunning", type="state")
+    system_ready = Signal(name="bSystemReady", type="state")
 
     signals.extend([
         start,

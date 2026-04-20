@@ -34,26 +34,59 @@ class SignalMonitor:
     async def run(self) -> None:
         try:
             while True:
-                lines = ["PLC STATES", ""]
-                start = time.perf_counter()
-                for signal in self.signals:
+                start_time = time.perf_counter()
+
+                io_signals = [s for s in self.signals if s.type == "io"]
+                state_signals = [s for s in self.signals if s.type == "state"]
+
+                io_rows: list[str] = []
+                state_rows: list[str] = []
+
+                for signal in io_signals:
                     try:
                         await signal.get_state()
-                        lines.append(f"{signal.name:<18}: {signal.state}")
+                        io_rows.append(
+                            f"{signal.name:<18} {str(signal.state):<8}")
                     except Exception as exc:
-                        lines.append(f"{signal.name:<18}: ERROR ({exc})")
+                        io_rows.append(f"{signal.name:<18}: ERROR ({exc})")
 
-                # lines.extend([
-                #     "Controls",
-                #     "s = start conveyor",
-                #     "x = stop conveyor",
-                #     "r = reset system",
-                #     "q = quit",
-                # ])
+                for signal in state_signals:
+                    try:
+                        await signal.get_state()
+                        state_rows.append(
+                            f"{signal.name:<18} {str(signal.state):<8}")
+                    except Exception as exc:
+                        state_rows.append(f"{signal.name:<18}: ERROR ({exc})")
+
+                left_header = "INPUTS"
+                right_header = "STATES"
+
+                left_width = 30
+                right_width = 30
+                separator = "   "
+
+                max_rows = max(len(io_rows), len(state_rows))
+
+                while len(io_rows) < max_rows:
+                    io_rows.append("")
+
+                while len(state_rows) < max_rows:
+                    state_rows.append("")
+
+                lines = [
+                    f"{left_header:<{left_width}}{separator}{right_header:<{right_width}}",
+                    f"{'-' * left_width}{separator}{'-' * right_width}",
+                ]
+
+                for left, right in zip(io_rows, state_rows):
+                    lines.append(
+                        f"{left:<{left_width}}{separator}{right:<{right_width}}")
 
                 await self.ui_func(lines)
-                elapsed = time.perf_counter() - start
+
+                elapsed = time.perf_counter() - start_time
                 wait_time = self.interval - elapsed
                 await asyncio.sleep(max(0, wait_time))
+
         except asyncio.CancelledError:
             raise

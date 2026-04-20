@@ -60,7 +60,9 @@ class PlcTui(App):
     async def action_reset(self) -> None:
         self.reset_signal.pulse()
 
-    def action_quit(self) -> None:
+    async def action_quit(self) -> None:
+        if self.monitor is not None:
+            await self.monitor.stop()
         self.exit()
 
     async def on_mount(self) -> None:
