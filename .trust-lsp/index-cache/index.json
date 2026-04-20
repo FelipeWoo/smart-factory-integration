@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "entries": {
+    "/home/warlock/hub/collaborations/public/smart-factory-integration/codesys/plc/gvl/io.st": {
+      "hash": 3476900567878811119,
+      "size": 0,
+      "mtime": 1776651386,
+      "content": ""
+    },
+    "/home/warlock/hub/collaborations/public/smart-factory-integration/codesys/plc/prg/conveyor.st": {
+      "hash": 6097375635338143169,
+      "size": 1848,
+      "mtime": 1776651733,
+      "content": "PROGRAM PLC_PRG\nVAR\n\tstart_cmd\t\t: BOOL := FALSE;\n    start_button    : BOOL := FALSE;\n\tstart_request\t: BOOL := FALSE;\n\tstart_pulse\t\t: BOOL := FALSE;\n\t\n\tstop_cmd\t\t: BOOL := FALSE;\n    stop_button     : BOOL := FALSE;\n\tstop_request\t: BOOL := FALSE;\n\tstop_pulse\t\t: BOOL := FALSE;\n\t\n\te_stop\t\t\t: BOOL := FALSE;\n\t\n\treset_cmd\t\t: BOOL := FALSE;\n\treset_request\t: BOOL := FALSE;\n\treset_pulse\t\t: BOOL := FALSE;\n\t\n    r_start         : R_TRIG;\n    r_stop          : R_TRIG;\n\tr_reset         : R_TRIG;\n\n\tmotor_running   : BOOL := FALSE;\n    part_detected   : BOOL := FALSE;\n    alarm_active    : BOOL := FALSE;\n\t\n\tsystem_ready\t: BOOL := TRUE;\n\tauto_mode\t\t: BOOL := TRUE;\n\tstarvation\t\t: BOOL := FALSE;\n\t\n\tt_starvation_delay\t: TON;\n\tt_fault_delay\t    : TON;\n\t\nEND_VAR\n\nsystem_ready := auto_mode AND NOT e_stop AND NOT starvation AND NOT alarm_active;\nstop_request := stop_cmd OR stop_button;\nstart_request := (start_cmd OR start_button) AND system_ready;\nreset_request := reset_cmd AND NOT e_stop;\n\n\nr_start(CLK := start_request);\nr_stop(CLK := stop_request);\nr_reset(CLK := reset_request);\n\nIF e_stop THEN\n    motor_running := FALSE;\nEND_IF;\n\nstart_pulse := r_start.Q;\nstop_pulse := r_stop.Q;\nreset_pulse := r_reset.Q;\n\nIF stop_pulse THEN\n    motor_running := FALSE;\nELSIF start_pulse THEN\n    motor_running := TRUE;\nEND_IF;\n\nt_starvation_delay(\n\tIN := NOT part_detected AND motor_running, (*absence of product*)\n\tPT := T#15S (*time just fot simulation purposes*)\n);\n\nIF t_starvation_delay.Q THEN\n\tstarvation := TRUE;\n\tmotor_running := FALSE;\nEND_IF;\n\nt_fault_delay(\n\tIN := part_detected AND motor_running, (*something obstructing*)\n\tPT := T#10S (*time just fot simulation purposes*)\n);\n\nIF t_fault_delay.Q THEN\n    alarm_active := TRUE;\n\tmotor_running := FALSE;    \nEND_IF;\n\nIF reset_pulse THEN\n\tstarvation := FALSE;\n\talarm_active := FALSE;\nEND_IF;\n\nEND_PROGRAM"
+    }
+  }
+}
