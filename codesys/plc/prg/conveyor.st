@@ -1,4 +1,4 @@
-PROGRAM PRG_Main
+PROGRAM PLC_PRG
 VAR
     (* --- COMMANDS / INPUTS --- *)
     bStartCmd      : BOOL := FALSE;

@@ -206,4 +206,4 @@ __marimo__/
 # Custom
 .private/
 
-.trust-lsp/*
+.trust-lsp/
