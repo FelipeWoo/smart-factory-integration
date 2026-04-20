@@ -22,6 +22,7 @@ class PlcTui(App):
     BINDINGS = [
         ("s", "start", "Start"),
         ("x", "stop", "Stop"),
+        ("r", "reset", "Reset"),
         ("q,escape", "quit", "Quit"),
     ]
 
@@ -29,12 +30,14 @@ class PlcTui(App):
         self,
         start_signal: Signal,
         stop_signal: Signal,
+        reset_signal: Signal,
         dispatch_controller: DispatchController,
         monitor: SignalMonitor | None = None,
     ) -> None:
         super().__init__()
         self.start_signal = start_signal
         self.stop_signal = stop_signal
+        self.reset_signal = reset_signal
         self.dispatch_controller = dispatch_controller
         self.monitor = monitor
 
@@ -53,6 +56,9 @@ class PlcTui(App):
     async def action_stop(self) -> None:
         self.stop_signal.pulse()
         await self.dispatch_controller.stop()
+
+    async def action_reset(self) -> None:
+        self.reset_signal.pulse()
 
     def action_quit(self) -> None:
         self.exit()

@@ -43,12 +43,13 @@ class SignalMonitor:
                     except Exception as exc:
                         lines.append(f"{signal.name:<18}: ERROR ({exc})")
 
-                lines.extend([
-                    "Controls",
-                    "s = start conveyor",
-                    "x = stop conveyor",
-                    "q = quit",
-                ])
+                # lines.extend([
+                #     "Controls",
+                #     "s = start conveyor",
+                #     "x = stop conveyor",
+                #     "r = reset system",
+                #     "q = quit",
+                # ])
 
                 await self.ui_func(lines)
                 elapsed = time.perf_counter() - start

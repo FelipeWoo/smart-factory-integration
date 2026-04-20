@@ -27,6 +27,7 @@ async def main():
     part_detected = Signal(name="bPartDetected", type="boolean")
     motor_running = Signal(name="bMotorIsRunning", type="boolean")
     system_ready = Signal(name="bSystemReady", type="boolean")
+    reset = Signal(name="bResetCmd", type="boolean")
 
     signals.extend([
         start,
@@ -34,6 +35,7 @@ async def main():
         part_detected,
         motor_running,
         system_ready,
+        reset,
     ])
 
     for signal in signals:
@@ -60,6 +62,7 @@ async def main():
         app = PlcTui(
             start_signal=start,
             stop_signal=stop,
+            reset_signal=reset,
             dispatch_controller=dispatch_controller,
         )
 
