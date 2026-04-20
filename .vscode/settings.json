@@ -60,5 +60,7 @@
   // GIT
   // ---------------------------
   "git.autofetch": true,
-  "trust-lsp.runtime.controlEndpoint": "unix:///tmp/trust-debug.sock"
+  "trust-lsp.runtime.controlEndpoint": "unix:///tmp/trust-debug.sock",
+  "trust-lsp.diagnostics.enabled": false,
+  "trust-lsp.diagnostics.unused": false
 }
