@@ -69,3 +69,4 @@ opc:
 
 plc:
 	@uv run -m codesys.plc_conveyor
+
