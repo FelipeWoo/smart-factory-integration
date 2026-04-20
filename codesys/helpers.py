@@ -1,5 +1,4 @@
-from asyncio import sleep
-from typing import Any, List
+from typing import Any
 
 from .signal import Signal
 
@@ -43,23 +42,8 @@ async def browse(name: str, node: Any, level: int = 0, max_depth: int = 4) -> An
     return None
 
 
-async def state(signals: List[Signal]) -> None:
+async def state(signals: list[Signal]) -> None:
     for signal in signals:
         await signal.get_state()
         print(signal)
     print()
-
-
-async def pulse(signal: Signal) -> None:
-    await signal.set_state(True)
-    await sleep(.500)
-    await signal.set_state(False)
-
-
-async def monitor_signals(signals: list[Signal], interval: float = 0.5) -> None:
-    while True:
-        print("\n--- STATES ---")
-        for signal in signals:
-            value = await signal.get_state()
-            print(f"{signal.name}: {value}")
-        await sleep(interval)

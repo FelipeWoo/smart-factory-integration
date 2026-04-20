@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, Awaitable, Callable
 
 from pydantic import BaseModel, PrivateAttr
@@ -7,6 +8,9 @@ class Signal(BaseModel):
     name: str
     type: str
     state: bool = False
+    _duration: float = 0.1
+    _lock = asyncio.Lock()
+    _task: asyncio.Task | None = None
 
     _node_id: str | None = PrivateAttr(default=None)
     _node: Any = PrivateAttr(default=None)
@@ -58,3 +62,22 @@ class Signal(BaseModel):
         if self._node is None:
             raise ValueError("node is not set")
         await self._set_state_fn(self._node, value)
+
+    def pulse(self) -> None:
+        if self._task is not None and not self._task.done():
+            return
+
+        self._task = asyncio.create_task(self._pulse())
+
+    async def _pulse(self) -> None:
+        async with self._lock:
+            try:
+                await self.set_state(True)
+                await asyncio.sleep(self._duration)
+                await self.set_state(False)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                ValueError(f"Write error on {self.name}:\n{exc}")
+            finally:
+                self._task = None

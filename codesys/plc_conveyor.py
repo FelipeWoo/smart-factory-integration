@@ -2,37 +2,16 @@ import asyncio
 
 from asyncua import Client
 
-from .helpers import browse, monitor_signals, pulse, read_bool, write_bool
+from .dispatch_controller import DispatchController
+from .helpers import browse, read_bool, write_bool
 from .signal import Signal
+from .signal_monitor import SignalMonitor
 from .tui import PlcTui
 
 IP = "192.168.6.218"
 PORT = "4840"
 
 URL = f"opc.tcp://{IP}:{PORT}"
-
-
-# async def run_test_sequence(
-#     start: Signal,
-#     stop: Signal,
-#     part_detected: Signal,
-# ) -> None:
-#     await asyncio.sleep(1)
-
-#     print("\nStarting...")
-#     await pulse(start)
-
-#     await asyncio.sleep(2)
-
-#     for i in range(5):
-#         print(f"\nSensing part... {i + 1}")
-#         await pulse(part_detected)
-#         await asyncio.sleep(1)
-
-#     print("\nStopping...")
-#     await pulse(stop)
-
-#     await asyncio.sleep(1)
 
 
 async def main():
@@ -63,8 +42,6 @@ async def main():
         signal.bind_get_state_fn(read_bool)
         signal.bind_set_state_fn(write_bool)
 
-    # monitor_task = None
-
     try:
         await client.connect()
         connected = True
@@ -75,37 +52,39 @@ async def main():
             # for debugging
             # print(f"{signal.name} -> {signal._node_id}")
 
-        # monitor_task = asyncio.create_task(
-        #     monitor_signals(signals, interval=0.5))
+        dispatch_controller = DispatchController(
+            part_signal=part_detected,
+            auto_dispatch=True,
+        )
 
-        # await run_test_sequence(
-        #     start=start,
-        #     stop=stop,
-        #     part_detected=part_detected,
-        # )
+        app = PlcTui(
+            start_signal=start,
+            stop_signal=stop,
+            dispatch_controller=dispatch_controller,
+        )
 
-        app = PlcTui(signals=signals)
+        monitor = SignalMonitor(
+            signals=signals,
+            ui_func=app.update_states,
+            interval=0.3,
+        )
+
+        app.monitor = monitor
+
         await app.run_async()
 
     except asyncio.CancelledError:
         raise
     except Exception as exc:
-        print(f"Connection error: {exc}")
+        ValueError(f"Connection error: {exc}")
 
     finally:
-        # if monitor_task is not None:
-        #     monitor_task.cancel()
-        #     try:
-        #         await monitor_task
-        #     except asyncio.CancelledError:
-        #         pass
-
         if connected:
             print("Disconnecting")
             try:
                 await client.disconnect()
             except Exception as exc:
-                print(f"Disconnect warning: {exc}")
+                ValueError(f"Disconnect warning: {exc}")
         print("Disconnected")
 
 
@@ -113,4 +92,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\nInterrupted by user (Ctrl + C)")
+        ValueError("\nInterrupted by user (Ctrl + C)")
