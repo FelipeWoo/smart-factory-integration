@@ -41,29 +41,36 @@ class SignalMonitor:
 
                 io_rows: list[str] = []
                 state_rows: list[str] = []
+                IO_NAME = 20
+                IO_STATE = 8
+
+                STATE_NAME = 30
+                STATE_STATE = 8
 
                 for signal in io_signals:
                     try:
                         await signal.get_state()
                         io_rows.append(
-                            f"{signal.name:<18} {str(signal.state):<8}")
+                            f"{signal.name:<{IO_NAME}} {str(signal.state):<{IO_STATE}}")
                     except Exception as exc:
-                        io_rows.append(f"{signal.name:<18}: ERROR ({exc})")
+                        io_rows.append(
+                            f"{signal.name:<{IO_NAME}}: ERROR ({exc})")
 
                 for signal in state_signals:
                     try:
                         await signal.get_state()
                         state_rows.append(
-                            f"{signal.name:<18} {str(signal.state):<8}")
+                            f"{signal.name:<{STATE_NAME}} {str(signal.state):<{STATE_STATE}}")
                     except Exception as exc:
-                        state_rows.append(f"{signal.name:<18}: ERROR ({exc})")
+                        state_rows.append(
+                            f"{signal.name:<{STATE_NAME}}: ERROR ({exc})")
 
                 left_header = "INPUTS"
                 right_header = "STATES"
 
                 left_width = 30
-                right_width = 30
-                separator = "   "
+                right_width = 50
+                separator = "   |   "
 
                 max_rows = max(len(io_rows), len(state_rows))
 
